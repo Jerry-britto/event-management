@@ -76,9 +76,8 @@ def logOutUser(request):
         return JsonResponse({"error": "User logout failed"}, status=500)
 
 
-# Pending Views
 
-# 1. Create Event
+#Create Event
 @csrf_exempt
 def create_event(request):
     if request.user.is_authenticated and not request.user.is_anonymous and request.method == 'POST':
@@ -118,7 +117,7 @@ def create_event(request):
     return JsonResponse({"error": "Only POST requests with logged in users are allowed"}, status=405)
 
 
-# 2. View all events
+# View all events
 @csrf_exempt
 def ViewAllEvents(request):
     if request.method == 'GET':
@@ -147,7 +146,7 @@ def ViewAllEvents(request):
         return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
 
 
-# 3. View logged in user Events
+# View logged in user Events
 @csrf_exempt
 def loggedInUserEvents(request):
     if request.method == 'GET':
@@ -181,7 +180,7 @@ def loggedInUserEvents(request):
         return JsonResponse({'message': 'Only GET requests are permitted'}, status=400)
 
 
-# 4. Stored User liked Events in the db
+#  Stored User liked Events in the db
 @csrf_exempt
 def likedEventsByUser(request):
     if request.user.is_authenticated and not request.user.is_anonymous and request.method == 'POST':
