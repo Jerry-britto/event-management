@@ -1,9 +1,10 @@
-from django.http import JsonResponse,HttpResponse
+from django.http import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate,login,logout
-from userevents.models import Event,LikedEvents
+from django.contrib.auth import authenticate, login, logout
+from userevents.models import Event, LikedEvents
+
 
 # Authentications Views.
 
@@ -12,36 +13,33 @@ from userevents.models import Event,LikedEvents
 def register(request):
     if request.method == 'POST':
         try:
+            # Retrieving the data from the request
             data = json.loads(request.body)
             email = data.get("email")
             password = data.get("password")
-            print(data)
-            if not email or not password:
-                print('error')
+            
+            if not email or not password: # Empty validations for email and password
                 return JsonResponse({"error": "Email and password are required"}, status=400)
             
-            user = User.objects.create_user(email,email,password)
+            # Registering the user
+            user = User.objects.create_user(email, email, password)
             user.save()
             print("Registered user ")
             return JsonResponse({"message": "User registered successfully "}, status=201)
         
         except json.JSONDecodeError:
-            print('error')
             return JsonResponse({"error": "Invalid json data received"}, status=400)
         except Exception as e:
-            print("Error occured during user registration: ",e)
-            return JsonResponse({"error":"An error occured while registersing user"},status=500)
+            print("Error occurred during user registration: ", e)
+            return JsonResponse({"error": "An error occurred while registering user"}, status=500)
         
     return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
+
 
 # log in view 
 @csrf_exempt
 def loginUser(request):
-    print("proccessing")
-    print(request.body)
     if request.method == 'POST':
-        print("proccesing")
-        print(request.body)
         try:
             data = json.loads(request.body)
             email = data.get("email")
@@ -53,7 +51,7 @@ def loginUser(request):
 
             if user is not None:
                 login(request, user)
-                return JsonResponse({"message": "User logged in successfully","email":user.email,"id":user.id}, status=200)
+                return JsonResponse({"message": "User logged in successfully", "email": user.email, "id": user.id}, status=200)
             else:
                 return JsonResponse({"error": "Invalid email or password"}, status=400)
 
@@ -64,24 +62,21 @@ def loginUser(request):
     return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
 
 
-#sign out view
+# Sign out view
 @csrf_exempt
 def logOutUser(request):
-    print("cookies",request.COOKIES)
-    print("User ",request.user)
     try:
         if request.user.is_authenticated and not request.user.is_anonymous:
             logout(request)
-            print("logout user",request.user)
             return JsonResponse({"message": "User logged out successfully"}, status=200)
         else:
             return JsonResponse({"error": "User is not logged in"}, status=400)
     except Exception as e:
         print("Could not log out user due to:", e)
         return JsonResponse({"error": "User logout failed"}, status=500)
-    
 
-### Pending Views
+
+# Pending Views
 
 # 1. Create Event
 @csrf_exempt
@@ -101,9 +96,7 @@ def create_event(request):
             if not event_name or not date or not time or not location:
                 return JsonResponse({"error": "Missing required fields"}, status=400)
 
-            print(event_name,date,time,location,request.user.id)
-            print(image)
-            #Create event object
+            # Create event object
             event = Event(
                 event_name=event_name,
                 date=date,
@@ -124,6 +117,7 @@ def create_event(request):
 
     return JsonResponse({"error": "Only POST requests with logged in users are allowed"}, status=405)
 
+
 # 2. View all events
 @csrf_exempt
 def ViewAllEvents(request):
@@ -138,7 +132,7 @@ def ViewAllEvents(request):
                     "time": event.time,
                     "location": event.location,
                     "image": event.image.url if event.image else None,
-                    "liked":event.isLiked
+                    "liked": event.isLiked
                 }
                 events.append(event_data)
 
@@ -151,6 +145,7 @@ def ViewAllEvents(request):
             return JsonResponse({'message': "Could not retrieve events"}, status=500)
     else:
         return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
+
 
 # 3. View logged in user Events
 @csrf_exempt
@@ -167,26 +162,24 @@ def loggedInUserEvents(request):
                         "time": event.time,
                         "location": event.location,
                         "image": event.image.url if event.image else None,
-                        "isLiked":event.isLiked
+                        "isLiked": event.isLiked
                     }
                     events.append(event_data)
 
                 if events:
-                    print('error')
-                    return JsonResponse({'message':"User Events",'events':events},status=200)
+                    return JsonResponse({'message': "User Events", 'events': events}, status=200)
                 else:
-                    print('error')
-                    return JsonResponse({'message':"No Events"},status=404)
+                    return JsonResponse({'message': "No Events"}, status=404)
                 
             else:
-                print('error')
-                return JsonResponse({'message':"User shall be logged in"},status=400)
+                return JsonResponse({'message': "User shall be logged in"}, status=400)
 
         except Exception as e:
-            print("could not get user events due to ",e)
-            return JsonResponse({'message':"an error occured while viewing user events"},status=500)
+            print("Could not get user events due to ", e)
+            return JsonResponse({'message': "An error occurred while viewing user events"}, status=500)
     else:
-        return JsonResponse({'message':'Only get request permitted'},status=400)
+        return JsonResponse({'message': 'Only GET requests are permitted'}, status=400)
+
 
 # 4. Stored User liked Events in the db
 @csrf_exempt
@@ -213,7 +206,7 @@ def likedEventsByUser(request):
         if event.isLiked:
             liked_event.likedEvents.add(event)
         else:
-            # unlike the event
+            # Unlike the event
             liked_event.likedEvents.remove(event)
 
             # If the likedEvents list becomes empty, delete the LikedEvents object
@@ -224,8 +217,3 @@ def likedEventsByUser(request):
 
     else:
         return JsonResponse({'message': "Only POST requests with logged in users are permitted"}, status=403)
-
-# 5. View likes events of logged in user (optional)
-
-
-
