@@ -22,7 +22,7 @@ This website is an event management platform built using ReactJS for the fronten
   - Django
 - **Database**:
   - MySQL
-  - 
+    
 ## Future Work
 
 - Implement functionality to filter and view only upcoming events.
